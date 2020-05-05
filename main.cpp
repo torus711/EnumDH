@@ -15,5 +15,13 @@ int main( int argc, char *argv[] )
 		return 1;
 	}
 
+	const int N = optparser.get< int >( "size" );
+	const bool bipartite = optparser.exist( "bipartite" );
+	if ( N <= 0 )
+	{
+		std::cerr << "The option -N ( or -size ) should be a positive integer." << std::endl;
+		return 2;
+	}
+
 	return 0;
 }
