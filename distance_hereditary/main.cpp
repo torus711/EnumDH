@@ -1,6 +1,6 @@
 #include <bits/stdc++.h>
 
-#include "./cmdline.h"
+#include "./../common/cmdline.h"
 #include "./interval.h"
 
 #ifndef USE_MPI
