@@ -1,10 +1,10 @@
-#include "./interval.h"
+#include "./dh.h"
 
-DHEnumerator::IntervalEnumerator( const int n, const bool c ) : AbstructEnumerator( n ), connected( c )
+DHEnumerator::DHEnumerator( const int n) : AbstructEnumerator( n )
 {
 }
 
-std::string IntervalDHEnumeratorEnumerator::root( const int N ) const
+std::string DHEnumerator::root( const int N ) const
 {
 }
 

@@ -4,19 +4,17 @@
 
 class DHEnumerator : public AbstructEnumerator< std::string >
 {
-	const bool connected;
-
 public:
-	DHEnumerator( const int n, const bool c );
+	DHEnumerator( const int n );
 
 private:
-	virtual VI root( const int N ) const override;
+	virtual std::string root( const int N ) const override;
 
-	virtual VI remove_edge( const VI &intervals, const int u, const int v ) const override;
-	virtual VI parent( const VI & ) const override;
+	virtual std::string remove_edge( const std::string &intervals, const int u, const int v ) const override;
+	virtual std::string parent( const std::string & ) const override;
 
-	virtual bool recognition( const VI &intervals ) const override;
-	virtual bool isomorphic( const VI &g1, const VI &g2 ) const override;
+	virtual bool recognition( const std::string &intervals ) const override;
+	virtual bool isomorphic( const std::string &g1, const std::string &g2 ) const override;
 
-	virtual void output( std::ostream &out, const VI &intervals ) const override;
+	virtual void output( std::ostream &out, const std::string &intervals ) const override;
 };

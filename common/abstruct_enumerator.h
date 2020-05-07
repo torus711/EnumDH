@@ -1,9 +1,6 @@
 #include <bits/stdc++.h>
 
-#include "./trie.h"
-#include "./../interval/mpq_tree.h"
-
-#if USE_MPI
+#ifdef USE_MPI
 #include "./parallel.h"
 #endif
 
@@ -33,7 +30,7 @@ private:
 
 	virtual void output( std::ostream &out, const Graph & ) const = 0;
 
-#if USE_MPI
+#ifdef USE_MPI
 public:
 	void slave() const;
 private:
@@ -56,7 +53,7 @@ void AbstructEnumerator< Graph >::enumerate( std::ostream &out ) const
 	std::queue< Graph > que;
 	que.push( root( N ) );
 
-#if USE_MPI
+#ifdef USE_MPI
 	std::queue< int > free_processes;
 
 	for ( int processing = NUM_PROC - 1; !que.empty() || processing; )
@@ -126,8 +123,7 @@ void AbstructEnumerator< Graph >::enumerate( std::ostream &out ) const
 template < typename Graph >
 std::vector< Graph > AbstructEnumerator< Graph >::children_candidates( const Graph &G ) const
 {
-	std::vector< Graph > result;
-	Trie trie( N );
+	std::set< Graph > result;
 
 	for ( int i = 0; i < N; ++i )
 	{
@@ -139,15 +135,14 @@ std::vector< Graph > AbstructEnumerator< Graph >::children_candidates( const Gra
 			}
 
 			const Graph c = remove_edge( G, i, j );
-			if ( recognition( c ) && !trie.contains( c ) )
+			if ( recognition( c ) )
 			{
-				result.push_back( c );
-				trie.add( c );
+				result.insert( c );
 			}
 		}
 	}
 
-	return result;
+	return { std::begin( result ), std::end( result ) };
 }
 
 template < typename Graph >
@@ -178,7 +173,7 @@ std::vector< Graph > AbstructEnumerator< Graph >::children( const Graph &G ) con
 }
 
 
-#if USE_MPI
+#ifdef USE_MPI
 template < typename Graph >
 void AbstructEnumerator< Graph >::slave() const
 {
