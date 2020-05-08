@@ -13,17 +13,15 @@ protected:
 public:
 	AbstructEnumerator( const int n );
 
-	void enumerate( std::ostream & ) const;
+	void exec( std::ostream & ) const;
 
 private:
-	std::vector< Graph > children_candidates( const Graph & ) const;
 	std::vector< Graph > children( const Graph & ) const;
 
-	virtual Graph root( const int N ) const = 0;
+	virtual std::vector< Graph > roots() const = 0;
 
-// 	virtual bool exist_edge( const Graph &, const int, const int ) const = 0;
-	virtual Graph remove_edge( const Graph &, const int u, const int v ) const = 0;
 	virtual Graph parent( const Graph & ) const = 0;
+	virtual std::vector< Graph > children_candidates( const Graph & ) const = 0;
 
 	virtual bool recognition( const Graph & ) const = 0;
 	virtual bool isomorphic( const Graph &, const Graph & ) const = 0;
@@ -48,10 +46,14 @@ AbstructEnumerator< Graph >::AbstructEnumerator( const int n ) : N( n )
 }
 
 template < typename Graph >
-void AbstructEnumerator< Graph >::enumerate( std::ostream &out ) const
+void AbstructEnumerator< Graph >::exec( std::ostream &out ) const
 {
 	std::queue< Graph > que;
-	que.push( root( N ) );
+	{
+		const auto rs = roots();
+		for_each( std::begin( rs ), std::end( rs ),
+				[&]( const auto &r ){ que.push( r ); } );
+	}
 
 #ifdef USE_MPI
 	std::queue< int > free_processes;
@@ -114,35 +116,10 @@ void AbstructEnumerator< Graph >::enumerate( std::ostream &out ) const
 				[&]( const Graph &c ){ que.push( c ); } );
 	}
 
-	std::cout << "# of size " << N << " : " << number << std::endl;
+	std::cout << "# of output : " << number << std::endl;
 #endif
 
 	return;
-}
-
-template < typename Graph >
-std::vector< Graph > AbstructEnumerator< Graph >::children_candidates( const Graph &G ) const
-{
-	std::set< Graph > result;
-
-	for ( int i = 0; i < N; ++i )
-	{
-		for ( int j = 0; j < N; ++j )
-		{
-			if ( i == j )
-			{
-				continue;
-			}
-
-			const Graph c = remove_edge( G, i, j );
-			if ( recognition( c ) )
-			{
-				result.insert( c );
-			}
-		}
-	}
-
-	return { std::begin( result ), std::end( result ) };
 }
 
 template < typename Graph >
@@ -153,25 +130,13 @@ std::vector< Graph > AbstructEnumerator< Graph >::children( const Graph &G ) con
 	std::vector< Graph > results;
 	for ( const Graph &c : CH )
 	{
-		// 			std::cout << "attempt : ";
-		// 			output( c );
-		// 			std::cout << "parent  : ";
-		// 			output( parent( c ) );
-		// 			std::cout << std::endl;
-		// 			output( c );
-		// 			output( MPQ_Tree( c ).normalize().relabel_nodes().canonical_form() );
-		// 			assert( c == MPQ_Tree( c ).normalize().relabel_nodes().canonical_form() );
-		// 			assert( c == MPQ_Tree( c ).normalize().normalize().relabel_nodes().canonical_form() );
 		if ( isomorphic( G, parent( c ) ) )
 		{
-			// 				std::cout << "OK" << std::endl;
 			results.push_back( c );
 		}
 	}
-
 	return std::move( results );
 }
-
 
 #ifdef USE_MPI
 template < typename Graph >

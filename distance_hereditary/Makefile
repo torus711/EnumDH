@@ -1,9 +1,9 @@
 CXX	:= g++
 CXXFLAGS := -std=c++17 -Wall -Wextra
 
-SRCS := main.cpp dh.cpp ./../common/abstruct_enumerator.cpp
-OBJECTS := $(dir SRCS)/$(SRCS:%.cpp=%.o)
-DEPS := $(dir OBJECTS)/$(OBJECTS:%.o=%.d)
+SRCS := main.cpp dh.cpp dhtree.cpp ./../common/abstruct_enumerator.cpp
+OBJECTS := $(dir SRCS)$(SRCS:%.cpp=%.o)
+DEPS := $(dir OBJECTS)$(OBJECTS:%.o=%.d)
 
 main.exe: $(OBJECTS)
 	$(CXX) -o $@ $^

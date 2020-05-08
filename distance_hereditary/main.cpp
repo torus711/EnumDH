@@ -21,7 +21,7 @@ int main( int argc, char *argv[] )
 #endif
 
 	cmdline::parser optparser;
-	optparser.add< int >( "size", 'n', "Upper bound of # of vertices to enumerate", true );
+	optparser.add< int >( "size", 'n', "Upper bound of # of vertices to enumerate. It should be greater or equal to 3", true );
 
 	if ( !optparser.parse( argc, argv ) )
 	{
@@ -32,6 +32,12 @@ int main( int argc, char *argv[] )
 	}
 
 	const int N = optparser.get< int >( "size" );
+
+	if ( N <= 2 )
+	{
+		std::cerr << "n is too small." << std::endl;
+		return 2;
+	}
 
 	DHEnumerator enumerator( N );
 #ifdef USE_MPI
@@ -45,7 +51,7 @@ int main( int argc, char *argv[] )
 		std::ofstream exec_time( "exec_times.csv", std::ofstream::app );
 		const clock_t clock_start = clock();
 
-		enumerator.enumerate( out );
+		enumerator.exec( out );
 
 		exec_time << N << '\t';
 		exec_time << std::setprecision( 2 ) << std::fixed << ( ( 1. * clock() - clock_start ) / CLOCKS_PER_SEC ) << std::endl;
