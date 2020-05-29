@@ -8,7 +8,7 @@ DHEnumerator::DHEnumerator( const int n ) : AbstructEnumerator( n ), N_( n )
 
 std::vector< std::string > DHEnumerator::roots() const
 {
-	return { "S(L()L())", "P(L()L()L())" };
+	return { "L()", "S(L()L())", "P(L()L()L())" };
 }
 
 bool DHEnumerator::recognition( const std::string & ) const
@@ -23,66 +23,14 @@ bool DHEnumerator::isomorphic( const std::string &v1, const std::string &v2 ) co
 
 std::string DHEnumerator::parent( const std::string &str ) const
 {
-	std::string s = str;
-	std::stack< char > stk;
-
-	for ( size_t i = 0; i < str.length(); ++i )
+	if ( str == "" || str == "L()" || str == "S(L()L())" || str == "P(L()L()L())" )
 	{
-		if ( isalpha( str[i] ) )
-		{
-			stk.push( str[i] );
-			if ( str[i] != 'L' )
-			{
-				continue;
-			}
-		}
-		if ( str[i] == '(' )
-		{
-			continue;
-		}
-		if ( str[i] == ')' )
-		{
-			stk.pop();
-			continue;
-		}
-
-		assert( str[i] == 'L' );
-
-		const char parent_type = stk.top();
-		if ( parent_type == 'P' )
-		{
-			// P(L(
-			if ( str[ i - 2 ] == 'P' )
-			{
-				continue;
-			}
-
-			s = s.erase( i, 3 );
-
-			i -= 2;
-			// P(L())
-			if ( s.substr( i, 6 ) == "P(L())" )
-			{
-				s = s.erase( i + 2, 3 );
-				s[i] = 'L';
-			}
-			return DHTree( s ).representation();
-		}
-		else
-		{
-			// *(L())
-			s = s.erase( i, 3 );
-			--i;
-			if ( s.substr( i, 2 ) == "()" )
-			{
-				--i;
-				s[i] = 'L';
-			}
-			return DHTree( s ).representation();
-		}
+		return "";
 	}
 
-	return "";
+	DHTree dhtree( str );
+	dhtree.prune_first_leaf();
+	return dhtree.representation();
 }
 
 std::vector< std::string > DHEnumerator::children_candidates( const std::string &str ) const
@@ -91,19 +39,18 @@ std::vector< std::string > DHEnumerator::children_candidates( const std::string 
 	{
 		return {};
 	}
+	if ( str == "L()" )
+	{
+		return {};
+	}
+
+// 	std::cerr << "chidlren candidates" << std::endl;
+// 	std::cerr << "str : " << str << std::endl;
 
 	std::stack< char > stk;
 	std::set< std::string > results;
 	for ( size_t i = 0; i < str.length(); ++i )
 	{
-		if ( isalpha( str[i] ) )
-		{
-			stk.push( str[i] );
-			if ( str[i] != 'L' )
-			{
-				continue;
-			}
-		}
 		if ( str[i] == '(' )
 		{
 			continue;
@@ -111,43 +58,52 @@ std::vector< std::string > DHEnumerator::children_candidates( const std::string 
 		if ( str[i] == ')' )
 		{
 			stk.pop();
-
 			continue;
 		}
 
-		assert( str[i] == 'L' );
+		assert( isalpha( str[i] ) );
+		stk.push( str[i] );
 
-		const char parent_type = stk.top();
+		std::vector< std::string > ss;
+
+		if ( i )
 		{ // add sibling
 			std::string s = str;
 			s.insert( i, "L()" );
-			results.insert( DHTree( s ).representation() );
+// 			std::cerr << "s : " << s << std::endl;
+			ss.push_back( s );
 		}
-		if ( parent_type != 'S' )
-		{ // convert to s
-			std::string s = str;
-			s.replace( i, 3, "S(L()L())" );
-			results.insert( DHTree( s ).representation() );
+		if ( str[i] == 'L' )
+		{
+			for ( const char c : std::string( "SWP" ) )
+			{
+				const auto node = std::string( 1, c ) + "(L()L())";
+				std::string s = str;
+				s.replace( i, 3, node );
+// 				std::cerr << "push : " << s << std::endl;
+// 				std::cerr << str << " -> " << s << std::endl;
+				ss.push_back( s );
+			}
 		}
-		if ( parent_type != 'W' || ( parent_type == 'P' && str[ i - 2 ] == 'P' ) )
-		{ // convert to w
-			std::string s = str;
-			s.replace( i, 3, "W(L()L())" );
-			results.insert( DHTree( s ).representation() );
-		}
-		{ // convert to p
-			std::string s = str;
-			s.replace( i, 3, "P(L()L())" );
-			results.insert( DHTree( s ).representation() );
+		for ( const auto &s : ss )
+		{
+// 			std::cerr << "s : " << s << std::endl;
+			const auto s2 = DHTree( s ).representation();
+			if ( s2 != "" )
+			{
+// 				std::cerr << "insert : " << s2 << std::endl;
+				results.insert( s2 );
+			}
 		}
 	}
 
+// 	std::cerr << "return from chidlren candidates" << std::endl;
 	return { std::begin( results ), std::end( results ) };
 }
 
 void DHEnumerator::output( std::ostream &out, const std::string &str ) const
 {
 	const int n = std::count( std::begin( str ), std::end( str ), 'L' );
-	std::cerr << n << " : " << str << std::endl;
+	std::cout << n << " : " << str << std::endl;
 	out << n << " : " << str << std::endl;
 }

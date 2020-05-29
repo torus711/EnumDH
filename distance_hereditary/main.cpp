@@ -10,6 +10,24 @@ int MY_RANK;
 MPI_Status mpi_status;
 #endif
 
+#define DUMP( x ) std::cerr << #x << " = " << ( x ) << std::endl;
+#include "dhtree.h"
+void test()
+{
+	{
+		const std::string s = "P(S(L()L())L()L())";
+		DUMP( s );
+		DHTree dhtree( s );
+		DUMP( dhtree.representation() );
+		dhtree.prune_first_leaf();
+		DUMP( dhtree.representation() );
+	}
+
+
+	return;
+}
+#undef DUMP
+
 int main( int argc, char *argv[] )
 {
 #ifdef USE_MPI
@@ -20,6 +38,7 @@ int main( int argc, char *argv[] )
 	assert( 2 <= NUM_PROC );
 #endif
 
+
 	cmdline::parser optparser;
 	optparser.add< int >( "size", 'n', "Upper bound of # of vertices to enumerate. It should be greater or equal to 3", true );
 
@@ -28,6 +47,8 @@ int main( int argc, char *argv[] )
 		std::cerr << optparser.error_full();
 		std::cerr << optparser.usage();
 		std::cerr << std::flush;
+		std::cerr << "Call test function..." << std::endl;
+		test();
 		return 1;
 	}
 
