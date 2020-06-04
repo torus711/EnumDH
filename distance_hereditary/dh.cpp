@@ -8,7 +8,7 @@ DHEnumerator::DHEnumerator( const int n ) : AbstructEnumerator( n ), N_( n )
 
 std::vector< std::string > DHEnumerator::roots() const
 {
-	return { "L()", "S(L()L())", "P(L()L()L())" };
+	return { "L()" };
 }
 
 bool DHEnumerator::recognition( const std::string & ) const
@@ -23,14 +23,15 @@ bool DHEnumerator::isomorphic( const std::string &v1, const std::string &v2 ) co
 
 std::string DHEnumerator::parent( const std::string &str ) const
 {
-	if ( str == "" || str == "L()" || str == "S(L()L())" || str == "P(L()L()L())" )
+	if ( str == "" || str == "L()" )
 	{
 		return "";
 	}
 
 	DHTree dhtree( str );
 	dhtree.prune_first_leaf();
-	return dhtree.representation();
+	const auto G = dhtree.get_graph();
+	return DHTree( G ).representation();
 }
 
 std::vector< std::string > DHEnumerator::children_candidates( const std::string &str ) const
@@ -39,61 +40,55 @@ std::vector< std::string > DHEnumerator::children_candidates( const std::string 
 	{
 		return {};
 	}
-	if ( str == "L()" )
+
+	std::cerr << "chidlren candidates" << std::endl;
+	std::cerr << "str : " << str << std::endl;
+
+	std::set< std::string > results;
+	const auto G0 = DHTree( str ).get_graph();
+
+	std::cerr << "G0" << std::endl;
+	std::cerr << "N = " << G0.size() << std::endl;
+	for ( size_t u = 0; u < G0.size(); ++u )
 	{
-		return {};
+		std::cerr << u << " : ";
+		for ( const int v : G0[u] )
+		{
+			std::cerr << v << ' ';
+		}
+		std::cerr << std::endl;
 	}
 
-// 	std::cerr << "chidlren candidates" << std::endl;
-// 	std::cerr << "str : " << str << std::endl;
-
-	std::stack< char > stk;
-	std::set< std::string > results;
-	for ( size_t i = 0; i < str.length(); ++i )
+	for ( size_t u = 0; u < G0.size(); ++u )
 	{
-		if ( str[i] == '(' )
-		{
-			continue;
+		{ // make pendant s.t. u is a neck
+			auto G = G0;
+			const int v = G.size();
+			G.emplace_back();
+			G[u].push_back( v );
+			G[v].push_back( u );
+			std::cerr << DHTree( G ).representation() << std::endl;
 		}
-		if ( str[i] == ')' )
-		{
-			stk.pop();
-			continue;
-		}
-
-		assert( isalpha( str[i] ) );
-		stk.push( str[i] );
-
-		std::vector< std::string > ss;
-
-		if ( i )
-		{ // add sibling
-			std::string s = str;
-			s.insert( i, "L()" );
-// 			std::cerr << "s : " << s << std::endl;
-			ss.push_back( s );
-		}
-		if ( str[i] == 'L' )
-		{
-			for ( const char c : std::string( "SWP" ) )
+		for ( const bool is_strong_twin : { true, false } )
+		{ 
+			auto G = G0;
+			const int v = G.size();
+			G.push_back( G[u] );
+			for ( const int w : G[u] )
 			{
-				const auto node = std::string( 1, c ) + "(L()L())";
-				std::string s = str;
-				s.replace( i, 3, node );
-// 				std::cerr << "push : " << s << std::endl;
-// 				std::cerr << str << " -> " << s << std::endl;
-				ss.push_back( s );
+				G[w].push_back( v );
 			}
-		}
-		for ( const auto &s : ss )
-		{
-// 			std::cerr << "s : " << s << std::endl;
-			const auto s2 = DHTree( s ).representation();
-			if ( s2 != "" )
+			if ( is_strong_twin )
 			{
-// 				std::cerr << "insert : " << s2 << std::endl;
-				results.insert( s2 );
+				G[u].push_back( v );
+				G[v].push_back( u );
 			}
+			if ( G0.size() == 1 && !is_strong_twin )
+			{
+				break;
+			}
+			std::cerr << DHTree( G ).representation() << std::endl;
+			results.insert( DHTree( G ).representation() );
 		}
 	}
 

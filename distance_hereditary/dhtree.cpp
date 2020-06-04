@@ -4,10 +4,212 @@ DHTree::DHTree( const std::string &str ) : N_( count( begin( str ), end( str ), 
 	root_( parse_node( std::cbegin( str ), std::cend( str ) ) )
 {
 	normalize();
-	verification();
+// 	verification();
 
 	return;
 }
+
+DHTree::DHTree( const std::vector< std::vector< int > > &G ) : N_( G.size() ), root_( construct_tree( G ) )
+{
+	normalize();
+// 	verification();
+
+	return;
+}
+
+std::shared_ptr< DHTree::Node > DHTree::construct_tree( std::vector< std::vector< int > > G )
+{
+	std::cerr << "construct tree" << std::endl;
+	int N = G.size();
+	for_each( std::begin( G ), std::end( G ),
+			[]( auto &row ){ std::sort( std::begin( row ), std::end( row ) ); } );
+
+	std::vector< std::shared_ptr< Node > > nodes;
+	generate_n( std::back_inserter( nodes ), N,
+				[]{ return std::make_shared< Node >( 'L', 1, 0 ); } );
+
+	std::vector< bool > removed( N );
+
+	while ( true )
+	{
+		if ( N <= 1 )
+		{
+			break;
+		}
+
+		std::map< std::vector< int >, std::vector< int > > open_neighbor, close_neighbor, pendants;
+
+		std::cerr << std::endl;
+		std::cerr << "N = " << G.size() << std::endl;
+		for ( size_t u = 0; u < G.size(); ++u ) 
+		{
+			std::cerr << u << " : ";
+			for ( auto v : G[u] )
+			{
+				std::cerr << v << ' ' ;
+			}
+			std::cerr << std::endl;
+		}
+		for ( size_t u = 0; u < G.size(); ++u ) 
+		{
+			for ( auto v : G[u] )
+			{
+				if ( u < v )
+				{
+					std::cerr << u << ' ' << v << std::endl;
+				}
+			}
+			std::cerr << std::endl;
+		}
+
+		for ( int u = 0; u < N; ++u )
+		{
+			if ( G[u].empty() ) // shrinken vertex
+			{
+				continue;
+			}
+
+			open_neighbor[ G[u] ].push_back( u );
+
+			auto row = G[u];
+			row.insert( lower_bound( std::begin( row ), std::end( row ), u ), u );
+			assert( is_sorted( std::begin( row ), std::end( row ) ) );
+			close_neighbor[ row ].push_back( u );
+
+			if ( G[u].size() == 1 )
+			{
+				pendants[ G[u] ].push_back( u );
+			}
+		}
+
+		std::cerr << "|close neighor| : " << close_neighbor.size() << std::endl;
+
+		if ( close_neighbor.size() == 1 ) // it is clique
+		{
+			std::cerr << "base case (clique)" << std::endl;
+
+			std::vector< std::shared_ptr< Node > > children;
+			int s = 1, d = 0;
+			for ( int u : std::begin( close_neighbor )->second )
+			{
+				s += nodes[u]->size_;
+				d = std::max( d, nodes[u]->depth_ );
+				children.push_back( nodes[u] );
+			}
+
+			auto parent = std::make_shared< Node >( 'S', s, d );
+			parent->children_ = children;
+			for ( int u : std::begin( close_neighbor )->second )
+			{
+				nodes[u] = parent;
+			}
+
+			break;
+		}
+		if ( open_neighbor.size() == 2 && pendants.size() == 1 ) // it is star
+		{
+			std::cerr << "base case (pendant)" << std::endl;
+
+			const int u = std::begin( pendants )->first[0];
+			auto row = std::begin( pendants )->second;
+			row.insert( std::begin( row ), u );
+
+			std::vector< std::shared_ptr< Node > > children;
+			int s = 1, d = 0;
+			for ( int v : row )
+			{
+				s += nodes[v]->size_;
+				d = std::max( d, nodes[v]->depth_ );
+				children.push_back( nodes[v] );
+			}
+
+			auto parent = std::make_shared< Node >( 'P', s, d );
+			parent->children_ = children;
+			for ( int v : row )
+			{
+				nodes[v] = parent;
+			}
+
+			break;
+		}
+
+		// shrink strong/weak twing and pendants
+		int type = 0;
+		for ( const auto neighbors : { close_neighbor, open_neighbor, pendants } )
+		{
+			std::cerr << "type : " << type << std::endl;
+			for ( auto p : neighbors )
+			{
+				if ( type == 1 && p.first.size() == 1 ) // it is pendant, not weak twin
+				{
+					std::cerr << "continue 1" << std::endl;
+					continue;
+				}
+
+				auto row = p.second;
+				if ( type <= 1 && row.size() == 1 ) // there are no peelable operation
+				{
+					std::cerr << "continue 2" << std::endl;
+					continue;
+				}
+
+				if ( type == 2 ) // it is pendant
+				{
+					const auto neck = p.first[0];
+					row.insert( std::begin( row ), neck );
+				}
+
+				std::vector< std::shared_ptr< Node > > children;
+				int s = 1, d = 0;
+				for ( const int u : row )
+				{
+					s += nodes[u]->size_;
+					d = std::max( d, nodes[u]->depth_ );
+					children.push_back( nodes[u] );
+				}
+
+				auto parent = std::make_shared< Node >( "SWP"[ type ], s, d );
+				parent->children_ = children;
+				for ( const int u : row )
+				{
+					nodes[u] = parent;
+				}
+
+				std::cerr << "shrink : ";
+				std::copy( std::begin( row ), std::end( row ), std::ostream_iterator< int >( std::cerr, " " ) );
+				std::cerr << std::endl;
+				for_each( std::begin( row ) + 1, std::end( row ),
+						[&]( const int u ){ assert( !removed[u] ); removed[u] = true; } );
+			}
+			++type;
+		}
+
+		// update graph
+		std::vector< std::vector< int > > Gn( N );
+		for ( int u = 0; u < N; ++u )
+		{
+			if ( removed[u] )
+			{
+				continue;
+			}
+			std::copy_if( std::begin( G[u] ), std::end( G[u] ), std::back_inserter( Gn[u] ),
+					[&]( const int v ){ return !removed[v]; } );
+		}
+		
+		G = Gn;
+		N = std::count( std::begin( removed ), std::end( removed ), false );
+	}
+	std::cerr << "end" << std::endl;
+	return nodes[0];
+}
+
+std::vector< std::vector< int > > DHTree::get_graph() const
+{
+	std::vector< std::vector< int > > G( 1 );
+	root_->construct_graph( G, 0 );
+	return G;
+}
+
 
 template < typename Iterator >
 std::shared_ptr< DHTree::Node > DHTree::parse_node( Iterator &&first, Iterator &&last ) const
@@ -140,7 +342,7 @@ std::string DHTree::representation() const
 	return root_->representation_;
 }
 
-DHTree::Node::Node( const char t, const int s, const int d ) :
+DHTree::Node::Node( const char t = 'L', const int s = 1, const int d = 0 ) :
 	type_( t ), size_( s ), depth_( d )
 {
 	return;
@@ -265,3 +467,67 @@ bool DHTree::Node::operator<( const Node &rhs ) const
 	return representation_ < rhs.representation_;
 }
 
+void DHTree::Node::construct_graph( std::vector< std::vector< int > > &G, int u ) const
+{
+	if ( type_ == 'L' )
+	{
+		return;
+	}
+
+	std::vector< int > vertices( 1, u );
+	for ( size_t i = 0; i < children_.size() - 1; ++i )
+	{
+		vertices.push_back( G.size() );
+		G.emplace_back();
+	}
+
+	std::cerr << "vertices : ";
+	for ( const auto v : vertices )
+	{
+		std::cerr << v << ' ';
+	}
+	std::cerr << std::endl;
+
+	if ( type_ == 'P' )
+	{
+		std::copy( std::begin( vertices ) + 1, std::end( vertices ), std::back_inserter( G[u] ) );
+		std::for_each( std::begin( vertices ) + 1, std::end( vertices ),
+				[&]( const int v ){ G[v].push_back( u ); } );
+	}
+	else
+	{
+		for ( size_t i = 0; i < children_.size() - 1; ++i )
+		{
+			std::for_each( std::begin( vertices ) + 1, std::end( vertices ),
+					[&]( const int v ){ G[v] = G[u]; } );
+		}
+		for ( const int w : G[u] )
+		{
+			std::for_each( std::begin( vertices ) + 1, std::end( vertices ),
+					[&]( const int v ){ G[w].push_back( v ); } );
+		}
+
+		if ( type_ == 'S' )
+		{
+			std::cerr << "u <-> v" << std::endl;
+			std::cerr << G.size() << std::endl;
+			for ( auto i : vertices )
+			{
+				for ( auto j : vertices )
+				{
+					if ( i != j )
+					{
+						G[i].push_back( j );
+					}
+				}
+			}
+		}
+	}
+
+	for ( size_t i = 0; i < vertices.size(); ++i )
+	{
+		children_[i]->construct_graph( G, vertices[i] );
+	}
+
+	return;
+}
