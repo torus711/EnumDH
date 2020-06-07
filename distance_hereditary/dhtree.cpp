@@ -6,6 +6,8 @@ DHTree::DHTree( const std::string &str ) : N_( count( begin( str ), end( str ), 
 	normalize();
 // 	verification();
 
+// 	std::cout << "from string : " << root_->representation_ << std::endl;
+
 	return;
 }
 
@@ -13,6 +15,8 @@ DHTree::DHTree( const std::vector< std::vector< int > > &G ) : N_( G.size() ), r
 {
 	normalize();
 // 	verification();
+
+// 	std::cout << "from graph : " << root_->representation_ << std::endl;
 
 	return;
 }
@@ -26,7 +30,7 @@ std::shared_ptr< DHTree::Node > DHTree::construct_tree( std::vector< std::vector
 
 	std::vector< std::shared_ptr< Node > > nodes;
 	generate_n( std::back_inserter( nodes ), N,
-				[]{ return std::make_shared< Node >( 'L', 1, 0 ); } );
+				[]{ return std::make_shared< Node >( 'L' ); } );
 
 	std::vector< bool > removed( N );
 
@@ -62,7 +66,7 @@ std::shared_ptr< DHTree::Node > DHTree::construct_tree( std::vector< std::vector
 			std::cerr << std::endl;
 		}
 
-		for ( int u = 0; u < N; ++u )
+		for ( int u = 0; u < G.size(); ++u )
 		{
 			if ( G[u].empty() ) // shrinken vertex
 			{
@@ -76,6 +80,10 @@ std::shared_ptr< DHTree::Node > DHTree::construct_tree( std::vector< std::vector
 			assert( is_sorted( std::begin( row ), std::end( row ) ) );
 			close_neighbor[ row ].push_back( u );
 
+			std::cerr << "close neighbor : ";
+			std::copy( std::begin( row ), std::end( row ), std::ostream_iterator< int >( std::cerr, " " ) );
+			std::cerr << std::endl;
+
 			if ( G[u].size() == 1 )
 			{
 				pendants[ G[u] ].push_back( u );
@@ -88,21 +96,23 @@ std::shared_ptr< DHTree::Node > DHTree::construct_tree( std::vector< std::vector
 		{
 			std::cerr << "base case (clique)" << std::endl;
 
-			std::vector< std::shared_ptr< Node > > children;
-			int s = 1, d = 0;
-			for ( int u : std::begin( close_neighbor )->second )
+			auto parent = std::make_shared< Node >( 'S' );
+			const auto &row = std::begin( close_neighbor )->second;
+
+
+			for ( int u : row )
 			{
-				s += nodes[u]->size_;
-				d = std::max( d, nodes[u]->depth_ );
-				children.push_back( nodes[u] );
+				std::cerr << u << std::endl;
+				parent->children_.push_back( std::move( nodes[u] ) );
 			}
 
-			auto parent = std::make_shared< Node >( 'S', s, d );
-			parent->children_ = children;
-			for ( int u : std::begin( close_neighbor )->second )
+			for ( int u : row )
 			{
 				nodes[u] = parent;
 			}
+
+			for_each( std::begin( row ) + 1, std::end( row ),
+					[&]( const int u ){ assert( !removed[u] ); removed[u] = true; } );
 
 			break;
 		}
@@ -114,21 +124,19 @@ std::shared_ptr< DHTree::Node > DHTree::construct_tree( std::vector< std::vector
 			auto row = std::begin( pendants )->second;
 			row.insert( std::begin( row ), u );
 
-			std::vector< std::shared_ptr< Node > > children;
-			int s = 1, d = 0;
+			auto parent = std::make_shared< Node >( 'P' );
 			for ( int v : row )
 			{
-				s += nodes[v]->size_;
-				d = std::max( d, nodes[v]->depth_ );
-				children.push_back( nodes[v] );
+				parent->children_.push_back( std::move( nodes[v] ) );
 			}
 
-			auto parent = std::make_shared< Node >( 'P', s, d );
-			parent->children_ = children;
 			for ( int v : row )
 			{
 				nodes[v] = parent;
 			}
+
+			for_each( std::begin( row ) + 1, std::end( row ),
+					[&]( const int u ){ assert( !removed[u] ); removed[u] = true; } );
 
 			break;
 		}
@@ -159,17 +167,12 @@ std::shared_ptr< DHTree::Node > DHTree::construct_tree( std::vector< std::vector
 					row.insert( std::begin( row ), neck );
 				}
 
-				std::vector< std::shared_ptr< Node > > children;
-				int s = 1, d = 0;
+				auto parent = std::make_shared< Node >( "SWP"[ type ] );
 				for ( const int u : row )
 				{
-					s += nodes[u]->size_;
-					d = std::max( d, nodes[u]->depth_ );
-					children.push_back( nodes[u] );
+					parent->children_.push_back( std::move( nodes[u] ) );
 				}
 
-				auto parent = std::make_shared< Node >( "SWP"[ type ], s, d );
-				parent->children_ = children;
 				for ( const int u : row )
 				{
 					nodes[u] = parent;
@@ -200,7 +203,9 @@ std::shared_ptr< DHTree::Node > DHTree::construct_tree( std::vector< std::vector
 		N = std::count( std::begin( removed ), std::end( removed ), false );
 	}
 	std::cerr << "end" << std::endl;
-	return nodes[0];
+	assert( std::count( std::begin( removed ), std::end( removed ), false ) == 1 );
+	const int u = std::find( std::begin( removed ), std::end( removed ), false ) - std::begin( removed );
+	return nodes[u];
 }
 
 std::vector< std::vector< int > > DHTree::get_graph() const
@@ -231,14 +236,7 @@ std::shared_ptr< DHTree::Node > DHTree::parse_node( Iterator &&first, Iterator &
 		children = children[0]->children_;
 	}
 
-	int size = 1, depth = 0;
-	for ( auto &child : children )
-	{
-		size += child->size_;
-		depth = std::max( depth, child->depth_ );
-	}
-
-	const auto p = std::make_shared< Node >( type, size, depth + 1 );
+	const auto p = std::make_shared< Node >( type );
 	p->children_ = children;
 	return p;
 }
@@ -334,6 +332,8 @@ void DHTree::prune_first_leaf()
 		root_->representation_ = "";
 	}
 	normalize();
+
+// 	std::cout << "from pruning : " << root_->representation_ << std::endl;
 	return;
 }
 
@@ -361,7 +361,7 @@ void DHTree::Node::contraction()
 	std::for_each( std::begin( children_ ), std::end( children_ ),
 			[]( const auto &p ){ p->contraction(); } );
 
-	if ( type_ == 'P' )
+	if ( type_ == 'P' || type_ == 'L' )
 	{
 		return;
 	}
@@ -380,6 +380,14 @@ void DHTree::Node::contraction()
 	}
 	std::copy( std::begin( will_be_moved ), std::end( will_be_moved ),
 			std::back_inserter( children_ ) );
+
+	size_ = 1;
+	depth_ = 0;
+	for ( const auto p : children_ )
+	{
+		size_ += p->size_;
+		depth_ = std::max( depth_, p->depth_ );
+	}
 
 	return;
 }
@@ -439,23 +447,26 @@ bool DHTree::Node::prune()
 		}
 	}
 
-	for ( auto it = std::begin( children_ ) + ( type_ == 'P' ); it != std::end( children_ ); ++it )
+	if  ( children_.size() < 2 )
 	{
-		if ( ( *it )->type_ != 'L' )
-		{
-			continue;
-		}
-
-		it = children_.erase( it );
-		if ( children_.size() == 1 )
-		{
-			children_.clear();
-			type_ = 'L';
-		}
-		return true;
+		assert( type_ == 'L' );
+		return false;
 	}
 
-	return false;
+	if ( any_of( std::begin( children_ ), std::end( children_ ),
+				[]( const auto &p ){ return p->type_ != 'L'; } ) )
+	{
+		return false;
+	}
+
+	children_.pop_back();
+	if ( children_.size() == 1 )
+	{
+		type_ = 'L';
+		children_.clear();
+	}
+
+	return true;
 }
 
 bool DHTree::Node::operator<( const Node &rhs ) const
@@ -496,11 +507,8 @@ void DHTree::Node::construct_graph( std::vector< std::vector< int > > &G, int u 
 	}
 	else
 	{
-		for ( size_t i = 0; i < children_.size() - 1; ++i )
-		{
-			std::for_each( std::begin( vertices ) + 1, std::end( vertices ),
-					[&]( const int v ){ G[v] = G[u]; } );
-		}
+		std::for_each( std::begin( vertices ) + 1, std::end( vertices ),
+				[&]( const int v ){ G[v] = G[u]; } );
 		for ( const int w : G[u] )
 		{
 			std::for_each( std::begin( vertices ) + 1, std::end( vertices ),

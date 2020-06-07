@@ -68,9 +68,15 @@ std::vector< std::string > DHEnumerator::children_candidates( const std::string 
 			G[u].push_back( v );
 			G[v].push_back( u );
 			std::cerr << DHTree( G ).representation() << std::endl;
+			results.insert( DHTree( G ).representation() );
 		}
 		for ( const bool is_strong_twin : { true, false } )
 		{ 
+			if ( G0.size() == 1 && !is_strong_twin )
+			{
+				continue;
+			}
+
 			auto G = G0;
 			const int v = G.size();
 			G.push_back( G[u] );
@@ -82,10 +88,6 @@ std::vector< std::string > DHEnumerator::children_candidates( const std::string 
 			{
 				G[u].push_back( v );
 				G[v].push_back( u );
-			}
-			if ( G0.size() == 1 && !is_strong_twin )
-			{
-				break;
 			}
 			std::cerr << DHTree( G ).representation() << std::endl;
 			results.insert( DHTree( G ).representation() );

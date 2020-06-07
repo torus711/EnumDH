@@ -6,7 +6,7 @@ class DHTree
 	{
 		char type_;
 		int size_;
-		const int depth_;
+		int depth_;
 		bool valid_ = true;
 		std::vector< std::shared_ptr< Node > > children_;
 		std::string representation_;
