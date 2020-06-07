@@ -80,7 +80,7 @@ std::shared_ptr< DHTree::Node > DHTree::construct_tree( std::vector< std::vector
 			assert( is_sorted( std::begin( row ), std::end( row ) ) );
 			close_neighbor[ row ].push_back( u );
 
-			std::cerr << "close neighbor : ";
+			std::cerr << "close neighbor : " << u << " : ";
 			std::copy( std::begin( row ), std::end( row ), std::ostream_iterator< int >( std::cerr, " " ) );
 			std::cerr << std::endl;
 
@@ -188,8 +188,8 @@ std::shared_ptr< DHTree::Node > DHTree::construct_tree( std::vector< std::vector
 		}
 
 		// update graph
-		std::vector< std::vector< int > > Gn( N );
-		for ( int u = 0; u < N; ++u )
+		std::vector< std::vector< int > > Gn( G.size() );
+		for ( int u = 0; u < G.size(); ++u )
 		{
 			if ( removed[u] )
 			{
@@ -330,6 +330,7 @@ void DHTree::prune_first_leaf()
 	if ( !root_->prune() )
 	{
 		root_->representation_ = "";
+		assert( false );
 	}
 	normalize();
 
