@@ -54,12 +54,6 @@ int main( int argc, char *argv[] )
 
 	const int N = optparser.get< int >( "size" );
 
-	if ( N <= 2 )
-	{
-		std::cerr << "n is too small." << std::endl;
-		return 2;
-	}
-
 	DHEnumerator enumerator( N );
 #ifdef USE_MPI
 	if ( MY_RANK == 0 )
