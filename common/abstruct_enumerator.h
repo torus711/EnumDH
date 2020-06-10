@@ -186,16 +186,20 @@ int AbstructEnumerator< Graph >::receive_command( const int target ) const
 template < typename Graph >
 void AbstructEnumerator< Graph >::send_graph( const int target, const Graph &G ) const
 {
-	MPI_Send( G.data(), 2 * N, MPI_INTEGER, target, MSG_TAGS::GRAPH, MPI_COMM_WORLD );
+	const int L = G.size();
+	MPI_Send( &L, 1, MPI_INTEGER, target, MSG_TAGS::GRAPH, MPI_COMM_WORLD );
+	MPI_Send( G.data(), L, MPI_CHARACTER, target, MSG_TAGS::GRAPH, MPI_COMM_WORLD );
 	return;
 }
 
 template < typename Graph >
 Graph AbstructEnumerator< Graph >::receive_graph( const int target ) const
 {
-	const auto buffer = std::make_unique< int[] >( 2 * N );
-	MPI_Recv( buffer.get(), 2 * N, MPI_INTEGER, target, MSG_TAGS::GRAPH, MPI_COMM_WORLD, &mpi_status );
-	return Graph( buffer.get(), buffer.get() + 2 * N );
+	int L;
+	MPI_Recv( &L, 1, MPI_INTEGER, target, MSG_TAGS::GRAPH, MPI_COMM_WORLD, &mpi_status );
+	const auto buffer = std::make_unique< char[] >( L );
+	MPI_Recv( buffer.get(), L, MPI_CHARACTER, target, MSG_TAGS::GRAPH, MPI_COMM_WORLD, &mpi_status );
+	return Graph( buffer.get(), buffer.get() + L );
 }
 
 #endif
