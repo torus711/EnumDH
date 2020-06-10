@@ -1,7 +1,7 @@
 #include "./dh.h"
 #include "./dhtree.h"
 
-DHEnumerator::DHEnumerator( const int n ) : AbstructEnumerator( n ), N_( n )
+DHEnumerator::DHEnumerator( const int n, bool o ) : AbstructEnumerator( n ), N_( n ), graph_output( o )
 {
 	return;
 }
@@ -81,7 +81,33 @@ std::vector< std::string > DHEnumerator::children_candidates( const std::string 
 
 void DHEnumerator::output( std::ostream &out, const std::string &str ) const
 {
-	const int n = std::count( std::begin( str ), std::end( str ), 'L' );
-	std::cout << n << " : " << str << std::endl;
-	out << n << " : " << str << std::endl;
+	if ( !graph_output )
+	{
+		const int n = std::count( std::begin( str ), std::end( str ), 'L' );
+		std::cout << n << " : " << str << std::endl;
+		out << n << " : " << str << std::endl;
+		return;
+	}
+
+	const auto G = DHTree( str ).get_graph();
+	std::vector< std::pair< int, int > > es;
+	const int N = G.size();
+	for ( int u = 0; u < N; ++u )
+	{
+		for ( const int v : G[u] )
+		{
+			if ( u < v )
+			{
+				es.emplace_back( u, v );
+			}
+		}
+	}
+
+	const int M = es.size();
+	out << N << ' ' << M << '\n';
+	for ( const auto &e : es )
+	{
+		out << e.first << ' ' << e.second << '\n';
+	}
+	out << std::flush;
 }

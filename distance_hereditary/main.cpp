@@ -54,7 +54,7 @@ int main( int argc, char *argv[] )
 
 	const int N = optparser.get< int >( "size" );
 
-	DHEnumerator enumerator( N );
+	DHEnumerator enumerator( N, true );
 #ifdef USE_MPI
 	if ( MY_RANK == 0 )
 #endif
