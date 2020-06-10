@@ -23,7 +23,6 @@ DHTree::DHTree( const std::vector< std::vector< int > > &G ) : N_( G.size() ), r
 
 std::shared_ptr< DHTree::Node > DHTree::construct_tree( std::vector< std::vector< int > > G )
 {
-	std::cerr << "construct tree" << std::endl;
 	int N = G.size();
 	for_each( std::begin( G ), std::end( G ),
 			[]( auto &row ){ std::sort( std::begin( row ), std::end( row ) ); } );
@@ -43,29 +42,6 @@ std::shared_ptr< DHTree::Node > DHTree::construct_tree( std::vector< std::vector
 
 		std::map< std::vector< int >, std::vector< int > > open_neighbor, close_neighbor, pendants;
 
-		std::cerr << std::endl;
-		std::cerr << "N = " << G.size() << std::endl;
-		for ( size_t u = 0; u < G.size(); ++u ) 
-		{
-			std::cerr << u << " : ";
-			for ( auto v : G[u] )
-			{
-				std::cerr << v << ' ' ;
-			}
-			std::cerr << std::endl;
-		}
-		for ( size_t u = 0; u < G.size(); ++u ) 
-		{
-			for ( auto v : G[u] )
-			{
-				if ( u < v )
-				{
-					std::cerr << u << ' ' << v << std::endl;
-				}
-			}
-			std::cerr << std::endl;
-		}
-
 		for ( int u = 0; u < G.size(); ++u )
 		{
 			if ( G[u].empty() ) // shrinken vertex
@@ -80,29 +56,19 @@ std::shared_ptr< DHTree::Node > DHTree::construct_tree( std::vector< std::vector
 			assert( is_sorted( std::begin( row ), std::end( row ) ) );
 			close_neighbor[ row ].push_back( u );
 
-			std::cerr << "close neighbor : " << u << " : ";
-			std::copy( std::begin( row ), std::end( row ), std::ostream_iterator< int >( std::cerr, " " ) );
-			std::cerr << std::endl;
-
 			if ( G[u].size() == 1 )
 			{
 				pendants[ G[u] ].push_back( u );
 			}
 		}
 
-		std::cerr << "|close neighor| : " << close_neighbor.size() << std::endl;
-
 		if ( close_neighbor.size() == 1 ) // it is clique
 		{
-			std::cerr << "base case (clique)" << std::endl;
-
 			auto parent = std::make_shared< Node >( 'S' );
 			const auto &row = std::begin( close_neighbor )->second;
 
-
 			for ( int u : row )
 			{
-				std::cerr << u << std::endl;
 				parent->children_.push_back( std::move( nodes[u] ) );
 			}
 
@@ -118,8 +84,6 @@ std::shared_ptr< DHTree::Node > DHTree::construct_tree( std::vector< std::vector
 		}
 		if ( open_neighbor.size() == 2 && pendants.size() == 1 ) // it is star
 		{
-			std::cerr << "base case (pendant)" << std::endl;
-
 			const int u = std::begin( pendants )->first[0];
 			auto row = std::begin( pendants )->second;
 			row.insert( std::begin( row ), u );
@@ -145,19 +109,16 @@ std::shared_ptr< DHTree::Node > DHTree::construct_tree( std::vector< std::vector
 		int type = 0;
 		for ( const auto neighbors : { close_neighbor, open_neighbor, pendants } )
 		{
-			std::cerr << "type : " << type << std::endl;
 			for ( auto p : neighbors )
 			{
 				if ( type == 1 && p.first.size() == 1 ) // it is pendant, not weak twin
 				{
-					std::cerr << "continue 1" << std::endl;
 					continue;
 				}
 
 				auto row = p.second;
 				if ( type <= 1 && row.size() == 1 ) // there are no peelable operation
 				{
-					std::cerr << "continue 2" << std::endl;
 					continue;
 				}
 
@@ -178,9 +139,6 @@ std::shared_ptr< DHTree::Node > DHTree::construct_tree( std::vector< std::vector
 					nodes[u] = parent;
 				}
 
-				std::cerr << "shrink : ";
-				std::copy( std::begin( row ), std::end( row ), std::ostream_iterator< int >( std::cerr, " " ) );
-				std::cerr << std::endl;
 				for_each( std::begin( row ) + 1, std::end( row ),
 						[&]( const int u ){ assert( !removed[u] ); removed[u] = true; } );
 			}
@@ -202,7 +160,6 @@ std::shared_ptr< DHTree::Node > DHTree::construct_tree( std::vector< std::vector
 		G = Gn;
 		N = std::count( std::begin( removed ), std::end( removed ), false );
 	}
-	std::cerr << "end" << std::endl;
 	assert( std::count( std::begin( removed ), std::end( removed ), false ) == 1 );
 	const int u = std::find( std::begin( removed ), std::end( removed ), false ) - std::begin( removed );
 	return nodes[u];
@@ -260,9 +217,7 @@ void DHTree::root_verification()
 	{
 		const int d1 = ( *std::rbegin( root_->children_ ) )->depth_;
 		const int d2 = ( *( std::rbegin( root_->children_ ) + 1 ) )->depth_;
-// 	std::cerr << root_->valid_ << std::endl;
 		root_->valid_ &= abs( d1 - d2 ) <= 1;
-// 	std::cerr << root_->valid_ << std::endl;
 	}
 
 	// Lemma 15, (d)
@@ -313,9 +268,6 @@ void DHTree::root_verification()
 // 	}
 //
 // 	assert( root_->type_ != 'L' );
-
-// 	std::cerr << "original   : " << str << std::endl;
-// 	std::cerr << "normalized : " << root_->representation_ << std::endl << std::endl;
 
 	if ( !root_->valid_ )
 	{
@@ -493,13 +445,6 @@ void DHTree::Node::construct_graph( std::vector< std::vector< int > > &G, int u 
 		G.emplace_back();
 	}
 
-	std::cerr << "vertices : ";
-	for ( const auto v : vertices )
-	{
-		std::cerr << v << ' ';
-	}
-	std::cerr << std::endl;
-
 	if ( type_ == 'P' )
 	{
 		std::copy( std::begin( vertices ) + 1, std::end( vertices ), std::back_inserter( G[u] ) );
@@ -518,8 +463,6 @@ void DHTree::Node::construct_graph( std::vector< std::vector< int > > &G, int u 
 
 		if ( type_ == 'S' )
 		{
-			std::cerr << "u <-> v" << std::endl;
-			std::cerr << G.size() << std::endl;
 			for ( auto i : vertices )
 			{
 				for ( auto j : vertices )

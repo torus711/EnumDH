@@ -40,24 +40,8 @@ std::vector< std::string > DHEnumerator::children_candidates( const std::string 
 	{
 		return {};
 	}
-
-	std::cerr << "chidlren candidates" << std::endl;
-	std::cerr << "str : " << str << std::endl;
-
 	std::set< std::string > results;
 	const auto G0 = DHTree( str ).get_graph();
-
-	std::cerr << "G0" << std::endl;
-	std::cerr << "N = " << G0.size() << std::endl;
-	for ( size_t u = 0; u < G0.size(); ++u )
-	{
-		std::cerr << u << " : ";
-		for ( const int v : G0[u] )
-		{
-			std::cerr << v << ' ';
-		}
-		std::cerr << std::endl;
-	}
 
 	for ( size_t u = 0; u < G0.size(); ++u )
 	{
@@ -67,7 +51,6 @@ std::vector< std::string > DHEnumerator::children_candidates( const std::string 
 			G.emplace_back();
 			G[u].push_back( v );
 			G[v].push_back( u );
-			std::cerr << DHTree( G ).representation() << std::endl;
 			results.insert( DHTree( G ).representation() );
 		}
 		for ( const bool is_strong_twin : { true, false } )
@@ -89,12 +72,10 @@ std::vector< std::string > DHEnumerator::children_candidates( const std::string 
 				G[u].push_back( v );
 				G[v].push_back( u );
 			}
-			std::cerr << DHTree( G ).representation() << std::endl;
 			results.insert( DHTree( G ).representation() );
 		}
 	}
 
-// 	std::cerr << "return from chidlren candidates" << std::endl;
 	return { std::begin( results ), std::end( results ) };
 }
 
