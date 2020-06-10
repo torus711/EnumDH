@@ -115,13 +115,15 @@ void AbstructEnumerator< Graph >::exec( std::ostream &out ) const
 		if ( std::count( std::begin( G ), std::end( G ), 'L' ) == N )
 		{
 			output( out, G );
+			++number;
 		}
-		++number;
 
 		const std::vector< Graph > CH = children( G );
 		for_each( std::begin( CH ), std::end( CH ),
 				[&]( const Graph &c ){ que.push( c ); } );
 	}
+
+	std::cerr << "# of output : " << number << std::endl;
 #endif
 
 	return;
