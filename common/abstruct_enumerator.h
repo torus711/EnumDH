@@ -84,7 +84,11 @@ void AbstructEnumerator< Graph >::exec( std::ostream &out ) const
 		{
 			const Graph G = que.front();
 			que.pop();
-			output( out, G );
+
+			if ( std::count( std::begin( G ), std::end( G ), 'L' ) == N )
+			{
+				output( out, G );
+			}
 
 			const int p = free_processes.front();
 			free_processes.pop();
@@ -108,15 +112,16 @@ void AbstructEnumerator< Graph >::exec( std::ostream &out ) const
 		const Graph G = que.front();
 		que.pop();
 
-		output( out, G );
+		if ( std::count( std::begin( G ), std::end( G ), 'L' ) == N )
+		{
+			output( out, G );
+		}
 		++number;
 
 		const std::vector< Graph > CH = children( G );
 		for_each( std::begin( CH ), std::end( CH ),
 				[&]( const Graph &c ){ que.push( c ); } );
 	}
-
-	std::cout << "# of output : " << number << std::endl;
 #endif
 
 	return;
