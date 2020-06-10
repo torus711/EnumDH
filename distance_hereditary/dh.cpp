@@ -84,7 +84,7 @@ void DHEnumerator::output( std::ostream &out, const std::string &str ) const
 	if ( !graph_output )
 	{
 		const int n = std::count( std::begin( str ), std::end( str ), 'L' );
-		std::cout << n << " : " << str << std::endl;
+// 		std::cout << n << " : " << str << std::endl;
 		out << n << " : " << str << std::endl;
 		return;
 	}
