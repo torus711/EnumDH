@@ -1,7 +1,27 @@
 #include "./dh.h"
 #include "./dhtree.h"
 
-DHEnumerator::DHEnumerator( const int n, bool o ) : AbstructEnumerator( n ), N_( n ), graph_output( o )
+bool are_clique( const std::vector< std::vector< int > > &G, const std::vector< int > &vertices )
+{
+	for ( const int u : vertices )
+	{
+		for ( const int v : vertices )
+		{
+			if ( u == v )
+			{
+				continue;
+			}
+
+			if ( std::find( std::begin( G[u] ), std::end( G[u] ), v ) == std::end( G[u] ) )
+			{
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+DHEnumerator::DHEnumerator( const int n, bool o, const bool p ) : AbstructEnumerator( n ), N_( n ), graph_output( o ), ptolemaic( p )
 {
 	return;
 }
@@ -59,6 +79,11 @@ std::vector< std::string > DHEnumerator::children_candidates( const std::string 
 			{
 				continue;
 			}
+			if ( ptolemaic && !is_strong_twin && !are_clique( G0, G0[u] ) )
+			{
+				continue;
+			}
+
 
 			auto G = G0;
 			const int v = G.size();

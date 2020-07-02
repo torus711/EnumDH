@@ -41,6 +41,7 @@ int main( int argc, char *argv[] )
 
 	cmdline::parser optparser;
 	optparser.add< int >( "size", 'n', "Upper bound of # of vertices to enumerate. It should be greater or equal to 3", true );
+	optparser.add( "ptolemaic", 'p', "Enumerate ptolemaic graphs instead of distance-hereditary graphs." );
 
 	if ( !optparser.parse( argc, argv ) )
 	{
@@ -53,8 +54,9 @@ int main( int argc, char *argv[] )
 	}
 
 	const int N = optparser.get< int >( "size" );
+	const bool ptolemaic = optparser.exist( "ptolemaic" );
 
-	DHEnumerator enumerator( N, false );
+	DHEnumerator enumerator( N, false, ptolemaic );
 #ifdef USE_MPI
 	if ( MY_RANK == 0 )
 #endif

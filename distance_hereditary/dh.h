@@ -6,8 +6,9 @@ class DHEnumerator : public AbstructEnumerator< std::string >
 {
 	const int N_;
 	const bool graph_output;
+	const bool ptolemaic;
 public:
-	DHEnumerator( const int n, bool o = false );
+	DHEnumerator( const int n, bool o = false, bool p = false );
 
 private:
 	virtual std::vector< std::string > roots() const override;
