@@ -62,7 +62,7 @@ int main( int argc, char *argv[] )
 #endif
 	{
 		std::ostringstream oss;
-		oss <<  "distance_hereditary_" << N << ".out";
+		oss <<  ( ptolemaic ? "ptolemaic_" : "distance_hereditary_" ) << N << ".out";
 		std::ofstream out( oss.str() );
 
 		std::ofstream exec_time( "exec_times.csv", std::ofstream::app );
