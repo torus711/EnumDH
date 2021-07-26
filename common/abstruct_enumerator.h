@@ -124,6 +124,8 @@ void AbstructEnumerator< Graph >::exec( std::ostream &out ) const
 	}
 
 	std::cerr << "# of output : " << number << std::endl;
+	std::ofstream ofs( "numbers.dat", std::ios_base::app );
+	ofs << number << ", " << std::endl;
 #endif
 
 	return;
