@@ -28,6 +28,8 @@ void test()
 }
 #undef DUMP
 
+std::string filename( const bool, const bool, const bool );
+
 int main( int argc, char *argv[] )
 {
 #ifdef USE_MPI
@@ -66,7 +68,7 @@ int main( int argc, char *argv[] )
 #endif
 	{
 		std::ostringstream oss;
-		oss <<  ( ptolemaic ? "ptolemaic_" : "distance_hereditary_" ) << N << ".out";
+		oss << filename( pendant, wtwin, stwin ) << '_' << N;
 		std::ofstream out( oss.str() );
 
 		std::ofstream exec_time( "exec_times.csv", std::ofstream::app );
@@ -89,4 +91,35 @@ int main( int argc, char *argv[] )
 #endif
 
 	return 0;
+}
+
+std::string filename( const bool pendant, const bool wtwin, const bool stwin )
+{
+	int flags = 0;
+	flags |= pendant;
+	flags |= 2 * wtwin;
+	flags |= 4 * stwin;
+
+	switch ( flags )
+	{
+	case 3:
+		return "bipartite_distance_hereditary";
+	case 7:
+		return "distance_hereditary";
+	}
+
+	std::string result;
+	if ( pendant )
+	{
+		result += "p_";
+	}
+	if ( wtwin )
+	{
+		result += "w_";
+	}
+	if ( stwin )
+	{
+		result += "s_";
+	}
+	return result;
 }
