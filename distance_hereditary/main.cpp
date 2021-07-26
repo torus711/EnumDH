@@ -62,7 +62,7 @@ int main( int argc, char *argv[] )
 	const bool wtwin = optparser.exist( "weak_twin" );
 	const bool stwin = optparser.exist( "strong_twin" );
 
-	DHEnumerator enumerator( N, false, ptolemaic );
+	DHEnumerator enumerator( N, false, pendant, wtwin, stwin );
 #ifdef USE_MPI
 	if ( MY_RANK == 0 )
 #endif
