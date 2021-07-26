@@ -21,7 +21,8 @@ bool are_clique( const std::vector< std::vector< int > > &G, const std::vector< 
 	return true;
 }
 
-DHEnumerator::DHEnumerator( const int n, bool o, const bool p ) : AbstructEnumerator( n ), N_( n ), graph_output( o ), ptolemaic( p )
+DHEnumerator::DHEnumerator( const int n, bool o, const bool p, const bool w, const bool s ) :
+	AbstructEnumerator( n ), N_( n ), graph_output( o ), use_pendant( p ), use_wtwin( w ), use_stwin( s )
 {
 	return;
 }
@@ -65,6 +66,7 @@ std::vector< std::string > DHEnumerator::children_candidates( const std::string 
 
 	for ( size_t u = 0; u < G0.size(); ++u )
 	{
+		if ( use_pendant )
 		{ // make pendant s.t. u is a neck
 			auto G = G0;
 			const int v = G.size();
@@ -79,11 +81,15 @@ std::vector< std::string > DHEnumerator::children_candidates( const std::string 
 			{
 				continue;
 			}
-			if ( ptolemaic && !is_strong_twin && !are_clique( G0, G0[u] ) )
+// 			if ( ptolemaic && !is_strong_twin && !are_clique( G0, G0[u] ) )
+// 			{
+// 				continue;
+// 			}
+
+			if ( ( !is_strong_twin && !use_wtwin ) || ( is_strong_twin && !use_stwin ) )
 			{
 				continue;
 			}
-
 
 			auto G = G0;
 			const int v = G.size();
