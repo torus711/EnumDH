@@ -43,7 +43,7 @@ int main( int argc, char *argv[] )
 
 	cmdline::parser optparser;
 	optparser.add< int >( "size", 'n', "Upper bound of # of vertices to enumerate. It should be greater or equal to 3", true );
-	optparser.add( "pendnat", 'p', "Use adding pendant operation" );
+	optparser.add( "pendant", 'p', "Use adding pendant operation" );
 	optparser.add( "weak_twin", 'w', "Use splitting weak twin operation" );
 	optparser.add( "strong_twin", 's', "Use splitting strong twin operation" );
 
