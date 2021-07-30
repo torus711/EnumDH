@@ -1,7 +1,10 @@
 #include "./dhtree.h"
 
+#define DUMP( x ) std::cerr << #x << " = " << ( x ) << std::endl;
+
 DHTree::DHTree( const std::string &str ) : N_( count( begin( str ), end( str ), 'L' ) ),
 	root_( parse_node( std::cbegin( str ), std::cend( str ) ) )
+
 {
 	normalize();
 // 	verification();
@@ -193,8 +196,13 @@ std::shared_ptr< DHTree::Node > DHTree::parse_node( Iterator &&first, Iterator &
 		children = children[0]->children_;
 	}
 
+	std::cerr << "Inisde parse_node" << std::endl;
+	DUMP( use_pendant );
 	const auto p = std::make_shared< Node >( type );
 	p->children_ = children;
+	DUMP( use_pendant );
+	DUMP( use_wtwin );
+	DUMP( use_stwin );
 	return p;
 }
 
@@ -279,6 +287,7 @@ void DHTree::root_verification()
 
 void DHTree::prune_first_leaf()
 {
+	DUMP( use_pendant );
 	if ( !root_->prune() )
 	{
 		root_->representation_ = "";
@@ -298,6 +307,7 @@ std::string DHTree::representation() const
 DHTree::Node::Node( const char t = 'L', const int s = 1, const int d = 0 ) :
 	type_( t ), size_( s ), depth_( d )
 {
+	std::cerr << "Node::Node() : " << use_pendant << std::endl;
 	return;
 }
 

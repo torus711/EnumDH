@@ -16,15 +16,27 @@ MPI_Status mpi_status;
 
 #define DUMP( x ) std::cerr << #x << " = " << ( x ) << std::endl;
 #include "dhtree.h"
+// #include "dh.h"
 void test()
 {
 	{
-		const std::string s = "P(S(L()L())L()L())";
+		const std::string s = "P(L()L()L())";
 		DUMP( s );
 		DHTree dhtree( s );
 		DUMP( dhtree.representation() );
-		dhtree.prune_first_leaf();
-		DUMP( dhtree.representation() );
+		DHEnumerator enumerator( 4, false );
+		std::cerr << "original:" << std::endl;
+		enumerator.output( std::cerr, s );
+		const auto cs = enumerator.children_candidates( s );
+		for ( const auto c : cs )
+		{
+			std::cerr << "candidate:" << std::endl;
+			enumerator.output( std::cerr, c );
+			std::cerr << std::endl;
+			std::cerr << "parent:" << std::endl;
+			enumerator.output( std::cerr, enumerator.parent( c ) );
+			std::cerr << std::endl;
+		}
 	}
 
 

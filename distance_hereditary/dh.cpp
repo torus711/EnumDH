@@ -1,6 +1,8 @@
 #include "./dh.h"
 #include "./dhtree.h"
 
+#define DUMP( x ) std::cerr << #x << " = " << ( x ) << std::endl;
+
 bool are_clique( const std::vector< std::vector< int > > &G, const std::vector< int > &vertices )
 {
 	for ( const int u : vertices )
@@ -49,6 +51,7 @@ std::string DHEnumerator::parent( const std::string &str ) const
 		return "";
 	}
 
+	DUMP( use_pendant );
 	DHTree dhtree( str );
 	dhtree.prune_first_leaf();
 	const auto G = dhtree.get_graph();
@@ -68,6 +71,7 @@ std::vector< std::string > DHEnumerator::children_candidates( const std::string 
 	{
 		if ( use_pendant )
 		{ // make pendant s.t. u is a neck
+			std::cerr << "pendant" << std::endl;
 			auto G = G0;
 			const int v = G.size();
 			G.emplace_back();
@@ -91,6 +95,8 @@ std::vector< std::string > DHEnumerator::children_candidates( const std::string 
 				continue;
 			}
 
+			std::cerr << ( is_strong_twin ? "strong twin" : "weak twin" ) << std::endl;
+
 			auto G = G0;
 			const int v = G.size();
 			G.push_back( G[u] );
@@ -104,6 +110,9 @@ std::vector< std::string > DHEnumerator::children_candidates( const std::string 
 				G[v].push_back( u );
 			}
 			results.insert( DHTree( G ).representation() );
+
+			output( std::cerr, DHTree( G ).representation() );
+			std::cerr << std::endl;
 		}
 	}
 
