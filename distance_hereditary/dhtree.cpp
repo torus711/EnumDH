@@ -29,7 +29,7 @@ std::shared_ptr< DHTree::Node > DHTree::construct_tree( std::vector< std::vector
 
 	std::vector< std::shared_ptr< Node > > nodes;
 	generate_n( std::back_inserter( nodes ), N,
-				[]{ return std::make_shared< Node >( 'L' ); } );
+				[&]{ return std::make_shared< Node >( 'L' ); } );
 
 	std::vector< bool > removed( N );
 
@@ -392,8 +392,19 @@ void DHTree::Node::verification()
 
 bool DHTree::Node::prune()
 {
+	std::cerr << "p: " << use_pendant << std::endl;
+	std::cerr << "w: " << use_wtwin << std::endl;
+	std::cerr << "s: " << use_stwin << std::endl;
+	if ( ( !use_pendant &&  type_ == 'P' ) ||
+			( !use_wtwin && type_ == 'W' ) ||
+			( !use_stwin && type_ == 'S' ) )
+	{
+// 		return false;
+	}
+
 	for ( const auto &p : children_ )
 	{
+
 		if ( p->prune() )
 		{
 			return true;

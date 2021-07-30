@@ -3,8 +3,12 @@
 #include "./../common/cmdline.h"
 #include "./dh.h"
 
+bool use_pendant = false;
+bool use_wtwin = false;
+bool use_stwin = false;
+
 #ifdef USE_MPI
-#include "./../common/parallel.h"
+
 int NUM_PROC;
 int MY_RANK;
 MPI_Status mpi_status;
@@ -28,7 +32,7 @@ void test()
 }
 #undef DUMP
 
-std::string filename( const bool, const bool, const bool );
+std::string filename();
 
 int main( int argc, char *argv[] )
 {
@@ -58,17 +62,17 @@ int main( int argc, char *argv[] )
 	}
 
 	const int N = optparser.get< int >( "size" );
-	const bool pendant = optparser.exist( "pendant" );
-	const bool wtwin = optparser.exist( "weak_twin" );
-	const bool stwin = optparser.exist( "strong_twin" );
+	use_pendant |= optparser.exist( "pendant" );
+	use_wtwin |= optparser.exist( "weak_twin" );
+	use_stwin |= optparser.exist( "strong_twin" );
 
-	DHEnumerator enumerator( N, false, pendant, wtwin, stwin );
+	DHEnumerator enumerator( N, false );
 #ifdef USE_MPI
 	if ( MY_RANK == 0 )
 #endif
 	{
 		std::ostringstream oss;
-		oss << filename( pendant, wtwin, stwin ) << '_' << N << ".out";
+		oss << filename() << '_' << N << ".out";
 		std::ofstream out( oss.str() );
 
 		std::ofstream exec_time( "exec_times.csv", std::ofstream::app );
@@ -93,12 +97,12 @@ int main( int argc, char *argv[] )
 	return 0;
 }
 
-std::string filename( const bool pendant, const bool wtwin, const bool stwin )
+std::string filename()
 {
 	int flags = 0;
-	flags |= pendant;
-	flags |= 2 * wtwin;
-	flags |= 4 * stwin;
+	flags |= use_pendant;
+	flags |= 2 * use_wtwin;
+	flags |= 4 * use_stwin;
 
 	switch ( flags )
 	{
@@ -109,15 +113,15 @@ std::string filename( const bool pendant, const bool wtwin, const bool stwin )
 	}
 
 	std::string result;
-	if ( pendant )
+	if ( use_pendant )
 	{
 		result += "p_";
 	}
-	if ( wtwin )
+	if ( use_wtwin )
 	{
 		result += "w_";
 	}
-	if ( stwin )
+	if ( use_stwin )
 	{
 		result += "s_";
 	}

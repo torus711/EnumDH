@@ -21,8 +21,8 @@ bool are_clique( const std::vector< std::vector< int > > &G, const std::vector< 
 	return true;
 }
 
-DHEnumerator::DHEnumerator( const int n, bool o, const bool p, const bool w, const bool s ) :
-	AbstructEnumerator( n ), N_( n ), graph_output( o ), use_pendant( p ), use_wtwin( w ), use_stwin( s )
+DHEnumerator::DHEnumerator( const int n, bool o ) :
+	AbstructEnumerator( n ), N_( n ), graph_output( o )
 {
 	return;
 }

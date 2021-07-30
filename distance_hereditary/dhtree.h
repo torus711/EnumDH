@@ -1,5 +1,9 @@
 #include <bits/stdc++.h>
 
+extern bool use_pendant;
+extern bool use_wtwin;
+extern bool use_stwin;
+
 class DHTree
 {
 	struct Node
