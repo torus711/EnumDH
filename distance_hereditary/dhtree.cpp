@@ -402,16 +402,6 @@ void DHTree::Node::verification()
 
 bool DHTree::Node::prune()
 {
-	std::cerr << "p: " << use_pendant << std::endl;
-	std::cerr << "w: " << use_wtwin << std::endl;
-	std::cerr << "s: " << use_stwin << std::endl;
-	if ( ( !use_pendant &&  type_ == 'P' ) ||
-			( !use_wtwin && type_ == 'W' ) ||
-			( !use_stwin && type_ == 'S' ) )
-	{
-// 		return false;
-	}
-
 	for ( const auto &p : children_ )
 	{
 
